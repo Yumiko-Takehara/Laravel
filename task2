@@ -1,0 +1,49 @@
+課題１〜３
+Controllerの役割
+・ルートから受け取った情報をモデルに処理をお願いする。
+・モデルから受け取った情報をビューにお願いする。
+
+具体的にはモデルからデーターベースにアクセスし、取得したデータをコントローラで加工してビューに渡すと行ったことや、ビューからのデータをモデルに渡し、データベースに保存をしたりする
+
+Routingの役割
+・ブラウザから入力するURLとフレームワークの各処理の対応を紐づけるもの
+
+
+課題４
+ec2-user:~/environment (master) $ cd ~/environment/mynews
+ec2-user:~/environment/mynews (master) $ php artisan make:controller Admin/ProfileController
+Controller created successfully.
+
+課題５
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
+
+class ProfileController extends Controller
+{
+    //以下を追記
+    public function add()
+    {
+      return view('admin.profile.create');
+}
+
+   public function create()
+   {
+     return redirect('admin.profile.create');
+   }
+   
+   public function edit()
+   {
+     return view('admin.profile.edit');
+   }
+   
+   public function update()
+   {
+     return redirect('admin.profile.edit');
+   }
+}
+
+
