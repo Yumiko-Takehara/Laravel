@@ -1,0 +1,29 @@
+課題１
+
+URLとControllerやActionを紐付ける機能：Routing
+
+課題２
+
+Group以下の設定を無名関数function(){}の中の全てのRoutingの設定に適用させることができる。
+無名関数function(){}の中の設定のURLを http://XXXXXX.jp/XXXX/ から始まるURLを指定することができる。
+ http://XXXXXX.jp/XXXX/ から始まるURLのRoutingの設定を複数行いたいから
+
+課題３
+
+Route::group([‘prefix’ => ‘XXX’], function() {
+Route::get(’XXX’, AAAControler/@bbb);
+});
+
+課題４
+
+admin/profile/create にアクセスしたら ProfileController の add Action に割り当てる設定
+
+Route::group(['prefix' => 'admin'], function() {
+  Route::get('admin/profile/create', 'admin/ProfileController@add');
+});
+
+admin/profile/edit にアクセスしたら ProfileController の edit Action に割り当てる設定
+
+Route::group(['prefix' => 'admin'], function() {
+  Route::get('admin/profile/edit', 'admin/ProfileController@edit');
+});
