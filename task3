@@ -11,7 +11,7 @@ Group以下の設定を無名関数function(){}の中の全てのRoutingの設�
 課題３
 
 Route::group([‘prefix’ => ‘XXX’], function() {
-Route::get(’XXX’, AAAControler/@bbb);
+Route::get(’XXX’, AAAControler\@bbb);
 });
 
 課題４
@@ -19,11 +19,11 @@ Route::get(’XXX’, AAAControler/@bbb);
 admin/profile/create にアクセスしたら ProfileController の add Action に割り当てる設定
 
 Route::group(['prefix' => 'admin'], function() {
-  Route::get('admin/profile/create', 'admin/ProfileController@add');
+  Route::get('admin/profile/create', 'Admin\ProfileController@add');
 });
 
 admin/profile/edit にアクセスしたら ProfileController の edit Action に割り当てる設定
 
 Route::group(['prefix' => 'admin'], function() {
-  Route::get('admin/profile/edit', 'admin/ProfileController@edit');
+  Route::get('admin/profile/edit', 'Admin\ProfileController@edit');
 });
