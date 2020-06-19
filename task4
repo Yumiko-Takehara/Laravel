@@ -1,0 +1,59 @@
+課題１
+Viewとは
+
+→Controllerの指示によって アクセスしてきたユーザーのブラウザに表示するデータを生成するところ
+
+
+課題２
+プログラマーがHTMLを書かずにPHPなどのプログラミング言語やフレームワークを使う必要があるのはどういった理由か
+
+→プログラマー自身が始めからHTMLを書くと決まったものを表示するhtmlファイルしか出力できず、ログインしたユーザーごとにWebページにユーザー名を表示したい場合などは、Model経由でデータベースからデータを取得し、それをhtmlファイルに記述してユーザーに渡す必要がある為、そういう場合にPHPなどのプログラミング言語や、ひいてはLaravelなどのフレームワークが使われる。
+
+
+課題３
+
+public function add()
+  {
+      return view('admin.profile.create');
+  }
+
+→admin/profileディレクトリ配下のcreate.blade.php というファイルを呼び出す という意味
+
+ public function edit()
+  {
+      return view('admin.profile.edit');
+  }
+
+→admin/profileディレクトリ配下のedit.blade.php というファイルを呼び出す という意味
+
+
+課題４
+
+$ cd ~/environment/mynewsにして
+$ mkdir -p ./resources/views/admin/profileを入力後
+Cloud9でフォルダを展開して、resources/views/admin/profileの ディレクトリを作成し、
+resources/views/admin/profileにcreate.blade.phpファイルを作成して、
+create.blade.phpファイルにHTMLの記述をして装飾する。
+
+ec2-user:~/environment (master) $ cd ~/environment/mynews
+ec2-user:~/environment/mynews (master) $ mkdir -p ./resources/views/admin/profile
+ec2-user:~/environment/mynews (master) $ php artisan serve --port=8080
+Laravel development server started: <http://127.0.0.1:8080>
+[Fri Jun 19 13:23:29 2020] Failed to listen on 127.0.0.1:8080 (reason: Address already in use)
+
+create.blade.phpファイル上の記述↓↓
+
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <title>MyProfile</title>
+    </head>
+    <body>
+        <h1>Myプロフィール作成画面</h1>
+    </body>
+</html>
+
