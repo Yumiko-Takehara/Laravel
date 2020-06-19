@@ -19,11 +19,11 @@ Route::get(’XXX’, AAAControler\@bbb);
 admin/profile/create にアクセスしたら ProfileController の add Action に割り当てる設定
 
 Route::group(['prefix' => 'admin'], function() {
-  Route::get('admin/profile/create', 'Admin\ProfileController@add');
+  Route::get('profile/create', 'Admin\ProfileController@add');
 });
 
 admin/profile/edit にアクセスしたら ProfileController の edit Action に割り当てる設定
 
 Route::group(['prefix' => 'admin'], function() {
-  Route::get('admin/profile/edit', 'Admin\ProfileController@edit');
+  Route::get('profile/create', 'Admin\ProfileController@');
 });
