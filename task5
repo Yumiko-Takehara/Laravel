@@ -1,0 +1,112 @@
+課題１
+
+Bladeテンプレートで、埋め込みたい箇所に利用するワード：継承
+
+
+
+課題２
+
+Webpackで使われているBootstrapやSCSSはどういったものか
+
+
+・Bootstrapとは
+
+
+Twitter社が開発しているCSSフレームワーク。
+
+フォームやボタン、ナビゲーション、モーダルなど汎用的なウェブサイトのパーツスタイルが提供されている。
+
+このような汎用パーツは一から作ると手間がかかるが、Bootstrapを使えば汎用パーツの開発の手間が省けるので生産性を上げられる。
+
+
+・SCSSとは
+
+
+SASSがCSSとの互換性が乏しかったために作られた記法。
+
+CSSを効率よくコントロールするためにRubyで作られたメタ言語。
+
+拡張子はscssのファイル形式。
+
+SCSSの最大のメリットは、CSSの書き方がそのまま使えること。(CSSとして正しい記述は必ず、SCSSとしても正しい記述になる。)
+
+SCSSでは変数や入れ子などを駆使できるため、一括管理・一括変更が簡単でコーディングの手間が省ける。
+
+SCSSの方が書き方がCSSに近いためコーディングしやすいと言われている。
+
+SCSS記法では、括弧{}を使い入れ構造にすることでCSSの依存関係を示す。
+
+Mixinで書いたコードを使いまわせる。
+
+
+
+
+課題３
+
+esources/views/layouts/admin.blade.php をコピーして profile.blade.php を同じディレクトリ（resources/views/layouts）に作成。また、以下の部分を下記のように修正。
+
+
+        {{-- 次の1行を削除 --}}
+        <link href="{{ secure_asset('css/admin.css') }}" rel="stylesheet">
+        {{-- 次の1行を追記 --}}
+        <link href="{{ secure_asset('css/profile.css') }}" rel="stylesheet">
+
+
+
+
+課題４
+
+プロフィール作成画面用に、resources/views/admin/profile/create.blade.php ファイルを作成し、3. で作成した profile.blade.phpファイルを読み込み、また プロフィールのページであることがわかるように titleとcontentを編集
+
+
+{{-- layouts/admin.blade.phpを読み込む --}}
+@extends('layouts.admin')
+
+
+{{-- admin.blade.phpの@yield('title')に'プロフィールの新規作成'を埋め込む --}}
+@section('title', 'プロフィールの新規作成')
+
+{{-- admin.blade.phpの@yield('content')に以下のタグを埋め込む --}}
+@section('content')
+    <div class="container">
+        <div class="row">
+            <div class="col-md-8 mx-auto">
+                <h2>プロフィール作成</h2>
+            </div>
+        </div>
+    </div>
+@endsection
+
+
+
+課題５
+
+resources/sass/admin.scss をコピーして profile.scss をresources/sassに作成
+
+
+課題６
+
+ webpack.mix.jsを編集して、profile.scss をコンパイルするように編集
+
+
+ | Mix provides a clean, fluent API for defining some Webpack build steps
+ | for your Laravel application. By default, we are compiling the Sass
+ | file for the application as well as bundling up all the JS files.
+ |
+ */
+
+mix.js('resources/assets/js/app.js', 'public/js')
+   .sass('resources/assets/sass/app.scss', 'public/css')
+   .sass('resources/assets/sass/profile.scss', 'public/css');
+
+
+課題７
+
+実際に npm run watch コマンドでコンパイル
+
+
+課題８
+
+ブラウザで /admin/profile/createでプロフィール作成画面が表 示されるか確認
+
+https://gyazo.com/577a0609987abcdbeae04036fa64edda
