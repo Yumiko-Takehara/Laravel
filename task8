@@ -1,0 +1,230 @@
+課題1.
+データベースとテーブルの関係を説明してください。
+
+
+データベースには様々なデータが格納されていて、データの種類ごとに格納されている。
+このデータベースの種類ごとの単位をテーブルという。
+テーブルは縦の行(レコード)と横の列(カラム)からなる二次元の表であり、Excelのシートのようなもの。
+データベースは複数のテーブルを保持し、テーブルごとにデータを管理する。
+
+
+
+
+課題2.
+テーブルを作成するときに事前にしなければならないことはなんですか？
+
+
+扱いたい情報や、テーブル定義というテーブルの各列に格納できるデータの型やサイズを決める。
+マイグレーションファイルの作成。
+
+
+
+
+課題3.
+Validationはどのような役目をしていますか？
+
+
+対象がその仕様や文法などに照らして適切に記述・構築されているか否かを検証する役目
+
+
+
+
+
+課題4.
+create_profile_table というMigrationの雛形ファイルを作成し、 profileというテーブル名で名前(name)、性別(gender)、趣味(hobby)、自己紹介(introduction)を保存できるように修正して、 migrateしてテーブルを作成しましょう。
+
+
+create_profile_table というMigrationの雛形ファイルを作成
+
+
+ec2-user:~/environment (master) $ cd mynews
+ec2-user:~/environment/mynews (master) $ php artisan make:migration create_profile_table
+Created Migration: 2020_07_03_104003_create_profile_table
+ec2-user:~/environment/mynews (master) $ php artisan migrate
+
+
+
+2020_07_03_104003_create_profile_tableの記述
+
+
+
+<?php
+
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Database\Migrations\Migration;
+
+class CreatProfileable extends Migration
+{
+    /**
+     * Run the migrations.
+     *
+     * @return void
+     */
+     // title と body と image_path を追記
+    public function up()
+    {
+        Schema::create('profiles', function (Blueprint $table) {
+            $table->bigIncrements('id');
+            $table->string('name'); // プロフィールの名前を保存するカラム
+            $table->string('gender');  // プロフィールの性別を保存するカラム
+            $table->string('hobby'); // プロフィールの趣味を保存するカラム
+            $table->string('introduction'); // プロフィールの自己紹介を保存するカラム
+            $table->string('image_path')->nullable();  // 画像のパスを保存するカラム
+            $table->timestamps();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     *
+     * @return void
+     */
+    public function down()
+    {
+        Schema::dropIfExists('profile');
+    }
+}
+
+
+
+
+
+課題5.
+Modelを作成するコマンドで Profile というModelを作成し、 名前(name)、性別(gender)、趣味(hobby)、自己紹介(introduction)に対してValidationをかけるようにしてみましょう。
+
+
+Profileの保存とModelの作成
+
+
+ec2-user:~/environment (master) $ cd mynews
+ec2-user:~/environment/mynews (master) $ php artisan make:model Profile
+Model created successfully.
+ec2-user:~/environment/mynews (master) $ 
+
+
+
+作成したProfile.php に次の内容を追記
+
+
+
+<?php
+
+namespace App;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Progiles extends Model
+{
+    protected $guarded = array('id');
+
+    // 以下を追記
+    public static $rules = array(
+        'title' => 'required',
+        'body' => 'required',
+    );
+}
+
+
+
+
+resources/views/admin/Profiles/create.blade.phpに追記
+
+
+
+{{-- layouts/admin.blade.phpを読み込む --}}
+@extends('layouts.admin')
+@section('title', 'プロフィールの新規作成')
+
+@section('content')
+    <div class="container">
+        <div class="row">
+            <div class="col-md-8 mx-auto">
+                <h2>プロフィール新規作成</h2>
+                <form action="{{ action('Admin\profileController@create') }}" method="post" enctype="multipart/form-data">
+
+                    @if (count($errors) > 0)
+                        <ul>
+                            @foreach($errors->all() as $e)
+                                <li>{{ $e }}</li>
+                            @endforeach
+                        </ul>
+                    @endif
+                    <div class="form-group row">
+                        <label class="col-md-2">タイトル</label>
+                        <div class="col-md-10">
+                            <input type="text" class="form-control" name="title" value="{{ old('title') }}">
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label class="col-md-2">本文</label>
+                        <div class="col-md-10">
+                            <textarea class="form-control" name="body" rows="20">{{ old('body') }}</textarea>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label class="col-md-2">画像</label>
+                        <div class="col-md-10">
+                            <input type="file" class="form-control-file" name="image">
+                        </div>
+                    </div>
+                    {{ csrf_field() }}
+                    <input type="submit" class="btn btn-primary" value="更新">
+                </form>
+            </div>
+        </div>
+    </div>
+@endsection
+
+
+
+app/Http/Controllers/Admin/ProfileController.phpを編集
+
+
+
+<?php
+namespace App\Http\Controllers\Admin;
+use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
+// 以下を追記することでProfile Modelが扱えるようになる
+use App\Profile;
+class ProfileController extends Controller
+{
+    public function add()
+    {
+        return view('admin.profile.create');
+    }
+    public function create(Request $request)
+    {
+        // 以下を追記
+        // Varidationを行う
+        $this->validate($request, Profile::$rules);
+        $profile = new Profile;
+        $form = $request->all();
+        // フォームから画像が送信されてきたら、保存して、$news->image_path に画像のパスを保存する
+        if (isset($form['image'])) {
+            $path = $request->file('image')->store('public/image');
+            $profile->image_path = basename($path);
+        } else {
+            $profile->image_path = null;
+        }
+        // フォームから送信されてきた_tokenを削除する
+        unset($form['_token']);
+        // フォームから送信されてきたimageを削除する
+        unset($form['image']);
+        // データベースに保存する
+        $profile->fill($form);
+        $profile->save();
+        return redirect('admin/profile/create');
+    }
+}
+
+
+
+
+課題6. resources/views/admin/profile/create.blade.php を開いて、Validationでエラーが発生した場合にエラーが表示されるようになっているか確認してみましょう。
+
+
+
+https://21998e817650453cbf44ac7caed9dd62.vfs.cloud9.us-east-2.amazonaws.com/admin/profile/create
+9.us-east-2.amazonaws.com/admin/profile/create
