@@ -1,0 +1,155 @@
+課題1.
+GETメソッドとPOSTメソッドについて調べ、どのような違いがあるか説明してください。
+
+
+GET：
+GETは指定したリソースの表現を転送するようにリクエストするメソッド
+(情報を取得するときに使うもの)
+一般的にブラウザで検索する際には無意識にGETメソッドを使っている。
+また仕様で安全かつ冪等(ある操作を一回行っても複数回行っても結果は同じであるということ)であると定義されているため、基本的に読み取り専用な機能に対して行うべきメソッド。
+GETを使うとどのような処理をしていたとしてもクライアントには安全なAPIだとみなされる。これは、クライアントからはサーバーがどのような処理を行なっているかを知ることはできないため。
+
+
+POST：
+POSTは指定したリソースを実装した機能に従って処理をする機能。
+(新しい情報の登録を行うときに使うもの)
+主に登録処理や更新処理などの、書き込みがありリソースが更新される可能性のある処理に対して行うメソッド。
+例として
+・HTMLの<form></form>に入力された内容をDBへ登録する。
+・ブログの記事を投稿する。
+・新しいユーザーを登録する。
+・既存のデータに新しい情報を付加する。
+また、GETとは反対に冪等(ある操作を一回行っても複数回行っても結果は同じであるということ)でないかつ安全でないと定義されている。
+
+
+
+
+課題２.
+ GET/POSTメソッド以外にどのようなメソッドがあるか、またどのように使われるかを説明してください。
+
+PUT：リソースの更新などに使われるがあまり使われないメソッド。冪等(ある操作を一回行っても複数回行っても結果は同じであるということ)であるが、安全性は低い。
+
+DELETE：リソースの削除をするメソッド。冪等(ある操作を一回行っても複数回行っても結果は同じであるということ)であるが、安全性は低い。
+
+HEAD：GETと似ているが、リソースのヘッダー情報のみ取得する(ボディ部分はなし)
+全ての情報を知りたいわけではない場合に使用する。ネットワーク帯域の節約になる。
+安全性は高い。
+
+OPTIONS：リソースがサポートするメソッドを取得する機能。リソースが８種類全てサポートしているわけではないため、これで確認する。
+安全性は高い。
+
+TRACE：動作の確認をするメソッド。リクエストのループバックを要求し、サーバーが受け取った内容をそのまま返す。(主にテスト目的)
+安全性は高い。
+
+CONNECT：プロキシへの多段接続など指定したサーバーへの接続を要求するメソッド。
+Proxyへの命令が多い。
+安全性は高い。
+
+
+
+課題3.
+routes/web.php を編集して、 admin/profile/create に postメソッドでアクセスしたら ProfileController の create Action に割り当てるように設定してください。
+
+
+routes/web.php を編集して、 admin/profile/create に postメソッドでアクセス
+
+
+Route::group(['prefix' => 'admin'], function() {
+  Route::get('profile/create', 'Admin\ProfileController@add');
+  Route::post('profile/create', 'Admin\profileController@create'); # 追記
+});
+
+Route::group(['prefix' => 'admin'], function() {
+  Route::get('profile/edit', 'Admin\ProfileController@edit');
+  Route::post('profile/create', 'Admin\profileController@edit'); # 追記
+});
+
+
+ProfileController の create Action に割り当てるように設定
+
+  // 以下を追記
+  public function create(Request $request)
+  {
+      // admin/profile/createにリダイレクトする
+      return redirect('admin/profile/create');
+  }  
+
+
+
+課題4.
+ resources/views/admin/profile/create.blade.php を編集して、氏名(name)、性別(gender)、趣味(hobby)、自己紹介欄(introduction)を入力するフォームを作成してください。また、formの送信先(<form action=”この部分”>)を、 Admin\ProfileController の create Action に指定してください。(ヒント: resources/views/admin/news/create.blade.php)
+
+
+{{-- layouts/admin.blade.phpを読み込む --}}
+@extends('layouts.admin')
+@section('title', 'プロフィールの新規作成')
+
+@section('content')
+    <div class="container">
+        <div class="row">
+            <div class="col-md-8 mx-auto">
+                <h2>プロフィール新規作成</h2>
+                <form action="{{ action('Admin\profileController@create') }}" method="post" enctype="multipart/form-data">
+
+                    @if (count($errors) > 0)
+                        <ul>
+                            @foreach($errors->all() as $e)
+                                <li>{{ $e }}</li>
+                            @endforeach
+                        </ul>
+                    @endif
+                    <div class="form-group row">
+                        <label class="col-md-2">タイトル</label>
+                        <div class="col-md-10">
+                            <input type="text" class="form-control" name="title" value="{{ old('title') }}">
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label class="col-md-2">本文</label>
+                        <div class="col-md-10">
+                            <textarea class="form-control" name="body" rows="20">{{ old('body') }}</textarea>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label class="col-md-2">画像</label>
+                        <div class="col-md-10">
+                            <input type="file" class="form-control-file" name="image">
+                        </div>
+                    </div>
+                    {{ csrf_field() }}
+                    <input type="submit" class="btn btn-primary" value="更新">
+                </form>
+            </div>
+        </div>
+    </div>
+@endsection
+
+
+
+課題5.
+https://gyazo.com/c9c2cf0194d0f2f70f350ea8be7ac2c0
+
+
+
+課題6.
+routes/web.php を編集して、 admin/profile/edit に postメソッドでアクセスしたら ProfileController の update Action に割り当てるように設定してください。
+
+
+routes/web.php を編集して、 admin/profile/edit に postメソッドでアクセス
+
+
+Route::group(['prefix' => 'admin'], function() {
+  Route::get('profile/edit', 'Admin\ProfileController@edit');
+  Route::post('profile/create', 'Admin\profileController@edit'); # 追記
+});
+
+
+ProfileController の update Action に割り当てるように設定
+
+
+public function update(Request $request)
+   {
+     // admin/profile/editにリダイレクトする
+     return redirect('admin/profile/edit');
+   }
+
