@@ -225,6 +225,4 @@ class ProfileController extends Controller
 課題6. resources/views/admin/profile/create.blade.php を開いて、Validationでエラーが発生した場合にエラーが表示されるようになっているか確認してみましょう。
 
 
-
-https://21998e817650453cbf44ac7caed9dd62.vfs.cloud9.us-east-2.amazonaws.com/admin/profile/create
-9.us-east-2.amazonaws.com/admin/profile/create
+エラーを確認済み
