@@ -1,0 +1,229 @@
+1.【超応用】 Controllersディレクト直下にProfileControllerを新規で作成、index Action を作成し、
+プロフィール情報を取得して profile/index.blade.php というViewテンプレートにプロフィール情報を渡して描画するように実装してください。
+
+
+Controllerを実装
+
+$ php artisan make:controller ProfileController
+
+生成した app/Http/Controllers/ProfileController.php に次の内容を入力
+
+※なお、管理画面で使用した NewsController.php と全く同じファイル名ですが、ディレクトリ階層が異なる点に注意
+
+
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\HTML;
+
+// 追記
+use App\Profile;
+
+class ProfileController extends Controller
+{
+    public function index(Request $request)
+    {
+        $posts = Profile::all()->sortByDesc('updated_at');
+
+        if (count($posts) > 0) {
+            $headline = $posts->shift();
+        } else {
+            $headline = null;
+        }
+
+        // profile/index.blade.php ファイルを渡している
+        // また View テンプレートに headline、 posts、という変数を渡している
+        return view('profile.index', ['headline' => $headline, 'posts' => $posts]);
+    }
+}
+
+
+Viewを実装
+
+フロント用のlayoutを作成
+ターミナルでadmin.blade.php をコピーしてfront.blade.php を作成
+
+
+$ cp resources/views/layouts/admin.blade.php resources/views/layouts/front.blade.php
+
+
+resources/views/layouts/front.blade.php を編集
+
+<!-- Styles -->
+        <link href="{{ asset('css/app.css') }}" rel="stylesheet">
+        {{-- 以下を削除 --}}
+        <link href="{{ asset('css/admin.css') }}" rel="stylesheet">
+        {{-- 以下を追記 --}}
+        <link href="{{ asset('css/front.css') }}" rel="stylesheet">
+
+
+フロント用のCSSを作成するために、resources/sass/front.scss を作成
+
+
+body {
+  color: #000;
+}
+
+.header {
+  .logo {
+      width: 120px;
+      height: 82px;
+  }
+}
+
+.headline {
+  .caption {
+    position: relative;
+    width: 350px;
+    .image {
+      img {
+    width: 100%;
+      }
+    }
+    .title {
+      width: 100%;
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      background-color: rgba(0, 0, 0, 0.6);
+      h1 {
+    color: #fff;
+    font-size: 1.2em;
+      }
+    }
+    .body {
+      font-size: 0.8em;
+    }
+  }
+}
+
+.posts {
+  .post {
+    .date {
+      font-size: 0.6em;
+      color: #999999;
+    }
+    .title {
+      font-size: 1.2em;
+      font-weight: bold;
+    }
+    .body {
+      font-size: 0.8em;
+    }
+    .image {
+      img {
+    width: 250px;
+      }
+    }
+  }
+}
+
+
+webpack.mix.js を編集して、front.scssをコンパイルするように設定
+
+
+mix.js('resources/js/app.js', 'public/js')
+ .sass('resources/sass/app.scss', 'public/css')
+ .sass('resources/sass/admin.scss', 'public/css')
+ .sass('resources/sass/profile.scss', 'public/css')
+ .sass('resources/sass/front.scss', 'public/css'); // 追記
+
+
+ターミナルでfront.scss　をコンパイル
+
+$ npm run watch
+
+
+次にViewテンプレートを実装
+次のコマンドで resources/views に profileディレクトリを作成
+
+
+$ mkdir resources/views/profile
+
+
+resources/views/profile/index.blade.php を作成し、次のように編集
+
+
+@extends('layouts.front')
+
+@section('content')
+    <div class="container">
+        <hr color="#c0c0c0">
+        @if (!is_null($headline))
+            <div class="row">
+                <div class="headline col-md-10 mx-auto">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="caption mx-auto">
+                                <div class="image">
+                                    @if ($headline->image_path)
+                                        <img src="{{ secure_asset('storage/image/' . $headline->image_path) }}">
+                                    @endif
+                                </div>
+                                <div class="title p-2">
+                                    <h1>{{ str_limit($headline->title, 70) }}</h1>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="body mx-auto">{{ str_limit($headline->body, 650) }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
+        <hr color="#c0c0c0">
+        <div class="row">
+            <div class="posts col-md-8 mx-auto mt-3">
+                @foreach($posts as $post)
+                    <div class="post">
+                        <div class="row">
+                            <div class="text col-md-6">
+                                <div class="date">
+                                    {{ $post->updated_at->format('Y年m月d日') }}
+                                </div>
+                                <div class="title">
+                                    {{ str_limit($post->title, 150) }}
+                                </div>
+                                <div class="body mt-3">
+                                    {{ str_limit($post->body, 1500) }}
+                                </div>
+                            </div>
+                            <div class="image col-md-6 text-right mt-4">
+                                @if ($post->image_path)
+                                    <img src="{{ secure_asset('storage/image/' . $post->image_path) }}">
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                    <hr color="#c0c0c0">
+                @endforeach
+            </div>
+        </div>
+    </div>
+    </div>
+@endsection
+
+
+
+2.【応用】 routes/web.phpを編集して、 /profile にアクセスが来たら ProfileController/index Action に渡すように設定してください。
+
+
+Routingの設定
+
+
+routes/web.php の1番下に次の内容を追記して下さい。
+
+
+Route::get('/', ‘ProfileController@index');
+
+
+また、画像の設置場所をLaravelに教えるために次のコマンドを入力します。
+
+
+$ php artisan storage:link
+
+$ php artisan serve --port=8080を実行し、/admin/profile/create画面で画像とプロフィールを登録し、Home画面で画像を確認
+
