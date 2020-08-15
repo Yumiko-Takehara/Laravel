@@ -26,7 +26,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-class CreateProfileHistoryTable extends Migration
+class CreateProfileHistoriesTable extends Migration
 {
     /**
      * Run the migrations.
@@ -35,10 +35,11 @@ class CreateProfileHistoryTable extends Migration
      */
     public function up()
     {
-        Schema::create('ProfileHistory', function (Blueprint $table) {
+        Schema::create('profile_histories', function (Blueprint $table) {
             $table->increments('id');
             $table->integer('profile_id');
             $table->string('edited_at');
+            $table->string('image_path')->nullable();  // 画像のパスを保存するカラム
 
             $table->timestamps();
         });
@@ -54,7 +55,6 @@ class CreateProfileHistoryTable extends Migration
         Schema::dropIfExists('profile_histories');
     }
 }
-
 
 
 Migrationを実行します。
@@ -109,13 +109,12 @@ class Profile extends Model
     );
       // 以下を追記
     // Profileモデルに関連付けを行う
-    public function ProfileHistory()
+    public function histories()
     {
       return $this->hasMany('App\ProfileHistory');
 
     }
 }
-
 
 Profileモデルに関連付けを定義することで、
 Profileモデルから $profile->histories() のような記述で簡単にアクセスすることができます。
@@ -128,27 +127,100 @@ update Actionを次のように変更。
 
 
 
- public function update(Request $request)
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
+
+use App\Profile;
+
+// 以下を追記
+use App\ProfileHistory;
+
+use Carbon\Carbon;
+
+
+class ProfileController extends Controller
+{
+  public function add()
   {
-      // Validationをかける
+      return view('admin.profile.create');
+  }
+
+  public function create(Request $request)
+  {
+
+      // Varidationを行う
       $this->validate($request, Profile::$rules);
-      // Profile Modelからデータを取得する
-      $profile = Profile::find($request->id);
-      // 送信されてきたフォームデータを格納する
-      $profile_form = $request->all();
-      if (isset($profile_form['image'])) {
+
+      $profile = new Profile;
+      $form = $request->all();
+
+      // formに画像があれば、保存する
+      if ($form['image']) {
         $path = $request->file('image')->store('public/image');
         $profile->image_path = basename($path);
-        unset($profile_form['image']);
-      } elseif (isset($request->remove)) {
-        $profile->image_path = null;
-        unset($profile_form['remove']);
+      } else {
+          $profile->image_path = null;
       }
-      unset($profile_form['_token']);
-      // 該当するデータを上書きして保存する
-      $profile->fill($profile_form)->save();
-      
-      // 以下を追記
+
+      unset($form['_token']);
+      unset($form['image']);
+      // データベースに保存する
+      $profile->fill($form);
+      $profile->save();
+
+      return redirect('admin/profile/create');
+  }
+
+  public function index(Request $request)
+  {
+      $cond_title = $request->cond_title;
+      if ($cond_title != '') {
+          $posts = Profile::where('title', $cond_title)->get();
+      } else {
+          $posts = Profile::all();
+      }
+      return view('admin.profile.index', ['posts' => $posts, 'cond_title' => $cond_title]);
+  }
+
+  // 以下を追記
+
+  public function edit(Request $request)
+  {
+      // Profile Modelからデータを取得する
+      $profile = Profile::find($request->id);
+      if (empty($profile)) {
+        abort(404);    
+      }
+      return view('admin.profile.edit', ['profile_form' => $profile]);
+  }
+  
+  public function update(Request $request)
+    {   // Validationをかける
+        $this->validate($request, Profile::$rules);
+              // Profile Modelからデータを取得する
+        $profile = Profile::find($request->id);
+        // 送信されてきたフォームデータを格納する
+        $profile_form = $request->all();
+        if ($request->remove == 'true') {
+            $profile_form['image_path'] = null;
+        } elseif ($request->file('image')) {
+            $path = $request->file('image')->store('public/image');
+            $profile_form['image_path'] = basename($path);
+        } else {
+            $profile_form['image_path'] = $profile->image_path;
+        }
+
+        unset($profile_form['_token']);
+        unset($profile_form['image']);
+        unset($profile_form['remove']);
+          // 該当するデータを上書きして保存する
+        $profile->fill($profile_form)->save();
+
+        // 以下を追記
         $ProfileHistory = new ProfileHistory;
         $ProfileHistory->profile_id = $profile->id;
         $ProfileHistory->edited_at = Carbon::now();
@@ -156,6 +228,20 @@ update Actionを次のように変更。
 
       return redirect('admin/profile');
   }
+
+
+  // 以下を追記　　
+  public function delete(Request $request)
+  {
+      // 該当するProfile Modelを取得
+      $profile = Profile::find($request->id);
+      // 削除する
+      $profile->delete();
+      return redirect('admin/profile/');
+  }  
+
+
+}
 
 
 
@@ -186,7 +272,7 @@ use Carbon\Carbon;
 
 
 
-extends('layouts.admin')
+@extends('layouts.admin')
 @section('title', 'プロフィールの編集')
 
 @section('content')
@@ -229,9 +315,7 @@ extends('layouts.admin')
                             <textarea class="form-control" name="introduction" rows="20">{{ old('introduction') }}</textarea>
                         </div>
                     </div>
-                  $profile_form->body }}</textarea>
-                        </div>
-                    </div>
+
                      <div class="form-group row">
                         <label class="col-md-2" for="image">画像</label>
                         <div class="col-md-10">
@@ -264,9 +348,9 @@ extends('layouts.admin')
                     <div class="col-md-4 mx-auto">
                         <h2>編集履歴</h2>
                         <ul class="list-group">
-                            @if ($profile_form->profile_histories != NULL)
-                                @foreach ($profile_form->profile_histories as $ProfileHistory)
-                                    <li class="list-group-item">{{ $ProfileHistory->edited_at }}</li>
+                            @if ($profile_form->histories != NULL)
+                                @foreach ($profile_form->histories as $history)
+                                    <li class="list-group-item">{{ $history->edited_at }}</li>
                                 @endforeach
                             @endif
                         </ul>
